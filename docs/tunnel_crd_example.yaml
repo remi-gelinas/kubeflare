@@ -1,0 +1,5 @@
+apiVersion: tunnel.kubeflare.dev/v1alpha1
+kind: Tunnel
+metadata:
+  name: test-tunnel
+spec:
