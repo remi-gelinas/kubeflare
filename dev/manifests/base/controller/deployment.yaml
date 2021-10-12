@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeflare-controller
+spec:
+  selector:
+    matchLabels:
+      app: kubeflare-controller
+  template:
+    metadata:
+      labels:
+        app: kubeflare-controller
+    spec:
+      containers:
+        - name: kubeflare-controller
+          image: ghcr.io/remi-gelinas/kubeflare-controller

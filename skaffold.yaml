@@ -1,0 +1,25 @@
+apiVersion: skaffold/v2beta24
+kind: Config
+metadata:
+  name: kubeflare
+build:
+  tagPolicy:
+    dateTime: {}
+  local:
+    useDockerCLI: true
+    useBuildkit: true
+  artifacts:
+  - image: ghcr.io/remi-gelinas/kubeflare-controller
+    context: .
+    docker:
+      dockerfile: dockerfiles/amd64.dockerfile
+deploy:
+  kustomize:
+    paths:
+      - dev/manifests/base
+profiles:
+- name: development
+  deploy:
+    kustomize:
+      paths:
+      - dev/manifests/overlays/dev

@@ -1,0 +1,60 @@
+[config]
+skip_core_tasks = true
+on_error_task = "teardown"
+
+[env]
+INITIAL_KUBE_CONTEXT = { script = ["kubectx -c"] }
+
+[env.development]
+KIND_CONFIG_PATH = "dev"
+KIND_CLUSTER_NAME = "kubeflare-dev-cluster"
+KIND_CLUSTER_CONFIG = "${KIND_CONFIG_PATH}/${KIND_CLUSTER_NAME}.yaml"
+KIND_CLUSTER_CONTEXT = "kind-${KIND_CLUSTER_NAME}"
+
+## STANDUP
+
+[tasks.create_cluster]
+description = "Deploys a dev cluster with kind"
+command = "kind"
+args = ["create", "cluster", "--config=${KIND_CLUSTER_CONFIG}", "--name", "${KIND_CLUSTER_NAME}"]
+private = true
+
+[tasks.export_cluster_config]
+description = "Sets the current kube context to the dev cluster"
+command = "kind"
+args = ["export", "kubeconfig", "--name", "${KIND_CLUSTER_NAME}"]
+private = true
+
+[tasks.standup]
+run_task = { name = ["create_cluster", "export_cluster_config"] }
+
+## TEARDOWN
+
+[tasks.delete_cluster]
+description = "Deletes the dev cluster"
+command = "kind"
+args = ["delete", "cluster", "--name=${KIND_CLUSTER_NAME}"]
+private = true
+
+[tasks.revert_context]
+description = "Reverts the current kube context to the initial context"
+command = "kubectx"
+args = ["${INITIAL_KUBE_CONTEXT}"]
+private = true
+
+[tasks.teardown]
+run_task = { name = ["delete_cluster", "revert_context"] }
+
+# DEVELOPMENT
+[tasks.skaffold]
+script ='''
+    script -q /dev/null -c "skaffold dev --kube-context ${KIND_CLUSTER_CONTEXT} --cleanup=true --assume-yes=true"
+'''
+private = true
+
+[tasks.dev]
+run_task = { name = ["standup", "skaffold", "teardown"] }
+
+## DEFAULT
+[tasks.default]
+run_task = "dev"
